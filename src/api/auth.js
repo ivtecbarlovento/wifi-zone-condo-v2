@@ -4,13 +4,15 @@ import Cookies from 'js-cookie';
 
 // Create axios instance with default config
 const apiClient = axios.create({
-    baseURL: '',  // Use relative URL when proxy is configured
+    baseURL: process.env.REACT_APP_API_URL || '',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
 console.log("API URL:", process.env.REACT_APP_API_URL); // Add this for debugging
+
+// Rest of your code remains the same
 
 // Add token to all requests if we have one
 apiClient.interceptors.request.use(

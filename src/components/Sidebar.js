@@ -1,10 +1,16 @@
 // src/components/Sidebar.js
 import React from 'react';
 import { Layout, Menu } from 'antd';
-import { DashboardOutlined, TableOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
+import { DashboardOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+
+// Import the logo assets
+import LogoLargeWhite from '../assets/LogoLargeWhite.png';
+import LogoWhite from '../assets/LogoWhite.png';
+import LogoLargeBlack from '../assets/LogoLargeBlack.png';
+import LogoBlack from '../assets/LogoBlack.png';
 
 const { Sider } = Layout;
 
@@ -56,15 +62,23 @@ const Sidebar = ({ collapsed }) => {
             <div className="logo" style={{
                 height: 64,
                 margin: 16,
-                // background: 'rgba(237, 34, 34, 0.2)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                color: darkMode ? 'white' : 'black',
-                fontWeight: 'bold',
-                fontSize: collapsed ? 14 : 18,
             }}>
-                {collapsed ? 'IVTEC' : 'IVTEC Barlovento C.A.'}
+                <img 
+                    src={
+                        collapsed 
+                            ? (darkMode ? LogoWhite : LogoBlack) 
+                            : (darkMode ? LogoLargeWhite : LogoLargeBlack)
+                    } 
+                    alt="IVTEC Logo"
+                    style={{
+                        maxHeight: '100%',
+                        maxWidth: '100%',
+                        objectFit: 'contain'
+                    }}
+                />
             </div>
 
             {!collapsed && (
@@ -89,4 +103,3 @@ const Sidebar = ({ collapsed }) => {
 };
 
 export default Sidebar;
-
