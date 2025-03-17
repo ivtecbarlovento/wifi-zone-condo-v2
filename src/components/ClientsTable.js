@@ -1,7 +1,7 @@
 // src/components/ClientsTable.js
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Space, Spin, Tag, Modal, Form, Select, Popconfirm } from 'antd';
-import { SearchOutlined, ReloadOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import {ReloadOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { fetchClients, updateClientStatus, deleteClient, fetchZones, createClient, updateClient } from '../api/data';
 
 const { confirm } = Modal;
