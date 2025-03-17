@@ -34,7 +34,7 @@ const Login = () => {
       <Card 
         title={
           <div style={{ textAlign: 'center' }}>
-            <h2>Weird Blue Snakes</h2>
+            <h2>IVTEC Barlovento C.A.</h2>
             <p>Client Management System</p>
           </div>
         } 
