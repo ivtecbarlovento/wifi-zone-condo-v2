@@ -3,9 +3,16 @@ import apiClient from './auth';
 
 export const fetchClients = async (params = {}) => {
   try {
-    const response = await apiClient.get('/clients');
+    // Get id_zone from user info in local storage or cookies
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const id_zone = userInfo.id_zone || 1;
     
-    // Handle pagination, sorting, filtering client-side if needed
+    // Pass id_zone as a query parameter
+    const response = await apiClient.get('/clients', {
+      params: { id_zone }
+    });
+    
+    // Rest of the function remains the same
     let data = [...response.data];
     
     // Simple filtering if search term is provided

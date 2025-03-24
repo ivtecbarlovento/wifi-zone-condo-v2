@@ -4,8 +4,13 @@ import { Row, Col, Card, Statistic, List, Tag } from 'antd';
 import { UserOutlined, CheckCircleOutlined, CloseCircleOutlined, GlobalOutlined } from '@ant-design/icons';
 import ClientsTable from '../components/ClientsTable';
 import { fetchClients, fetchZones } from '../api/data';
+import { useAuth } from '../contexts/AuthContext'; // Add this import
 
 const Dashboard = () => {
+    const { user } = useAuth(); // Get the current user
+    const userZone = user?.id_zone || 1; // Default to zone 1 if not available
+    const isAdmin = userZone === 1; // Check if user is admin
+    
     const [clientStats, setClientStats] = useState({
         total: 0,
         active: 0,
@@ -23,33 +28,60 @@ const Dashboard = () => {
                 // Get all clients
                 const clientsResponse = await fetchClients();
                 const allClients = clientsResponse.data;
-
+                
                 // Get all zones
                 const zonesData = await fetchZones();
+                
+                // Filter clients based on user's zone if not admin
+                const filteredClients = isAdmin 
+                    ? allClients 
+                    : allClients.filter(client => {
+                        // Get the zone object for the client's zone name
+                        const clientZone = zonesData.find(zone => zone.area === client.zone_name);
+                        return clientZone && clientZone.id === userZone;
+                    });
 
                 // Calculate statistics
-                const activeClients = allClients.filter(client => client.status === 'Active');
-                const inactiveClients = allClients.filter(client => client.status === 'Inactive');
+                const activeClients = filteredClients.filter(client => client.status === 'Active');
+                const inactiveClients = filteredClients.filter(client => client.status === 'Inactive');
 
                 // Calculate clients per zone
-                const zoneClientCounts = zonesData.map(zone => {
-                    const clientsInZone = allClients.filter(client => client.zone_name === zone.area);
-                    const activeInZone = clientsInZone.filter(client => client.status === 'Active');
+                let zoneClientCounts = [];
+                
+                if (isAdmin) {
+                    // For admin, calculate stats for all zones
+                    zoneClientCounts = zonesData.map(zone => {
+                        const clientsInZone = allClients.filter(client => client.zone_name === zone.area);
+                        const activeInZone = clientsInZone.filter(client => client.status === 'Active');
 
-                    return {
-                        name: zone.area,
-                        total: clientsInZone.length,
-                        active: activeInZone.length
-                    };
-                });
+                        return {
+                            name: zone.area,
+                            total: clientsInZone.length,
+                            active: activeInZone.length
+                        };
+                    });
+                } else {
+                    // For non-admin, only show their zone
+                    const userZoneData = zonesData.find(zone => zone.id === userZone);
+                    if (userZoneData) {
+                        const clientsInZone = allClients.filter(client => client.zone_name === userZoneData.area);
+                        const activeInZone = clientsInZone.filter(client => client.status === 'Active');
+                        
+                        zoneClientCounts = [{
+                            name: userZoneData.area,
+                            total: clientsInZone.length,
+                            active: activeInZone.length
+                        }];
+                    }
+                }
 
                 setClientStats({
-                    total: allClients.length,
+                    total: filteredClients.length,
                     active: activeClients.length,
                     inactive: inactiveClients.length
                 });
 
-                setZones(zonesData);
+                setZones(isAdmin ? zonesData : zonesData.filter(zone => zone.id === userZone));
                 setZoneStats(zoneClientCounts);
             } catch (error) {
                 console.error('Failed to load dashboard stats:', error);
@@ -59,7 +91,7 @@ const Dashboard = () => {
         };
 
         loadStats();
-    }, []);
+    }, [isAdmin, userZone]);
 
     return (
         <div>
@@ -127,7 +159,7 @@ const Dashboard = () => {
                         loading={loading}
                     >
                         <p>Server Status: <Tag color="green">Online</Tag></p>
-                        <p>Total Zones: {zones.length}</p>
+                        <p>Total Zones: {isAdmin ? zones.length : 1}</p>
                         <p>Last Updated: {new Date().toLocaleString()}</p>
                     </Card>
                 </Col>

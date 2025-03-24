@@ -4,15 +4,13 @@ import Cookies from 'js-cookie';
 
 // Create axios instance with default config
 const apiClient = axios.create({
-    baseURL: '',
+    baseURL: process.env.REACT_APP_API_URL || '',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-console.log("API URL:", process.env.REACT_APP_API_URL); // Add this for debugging
-
-// Rest of your code remains the same
+//console.log("API URL:", process.env.REACT_APP_API_URL); // Add this for debugging
 
 // Add token to all requests if we have one
 apiClient.interceptors.request.use(
@@ -32,14 +30,23 @@ export const login = async (credentials) => {
     try {
         const response = await apiClient.post('/auth/login', credentials);
 
-        // Since your API returns just a success message and not a token,
-        // we'll create a simple token for frontend authentication
         if (response.data.message === "Login successful") {
-            const fakeToken = `user_${credentials.username}_${Date.now()}`;
-            const userData = { username: credentials.username };
+            // Store user data, ensuring role is properly handled as a number
+            const userData = { 
+                username: credentials.username,
+                // Parse role as a number if it exists in the response, default to 3 (regular user)
+                role: response.data.id_role !== undefined ? parseInt(response.data.id_role) : 3,
+                // Store id_zone, default to 1
+                id_zone: response.data.id_zone || 1,
+                permissions: response.data.permissions || []
+            };
 
+            console.log("Processed user data:", userData); // Debugging line
+
+            const token = response.data.token || `user_${credentials.username}_${Date.now()}`;
+            
             return {
-                token: fakeToken,
+                token: token,
                 user: userData
             };
         }

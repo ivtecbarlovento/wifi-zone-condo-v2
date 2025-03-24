@@ -7,11 +7,11 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
+import UsersPage from './pages/UsersPage';
+import AccessDenied from './pages/AccessDenied';
 import PrivateRoute from './components/PrivateRoute';
 import NotFound from './pages/NotFound';
 import './styles/global.css';
-
-
 
 const AppContent = () => {
   const { darkMode } = useTheme();
@@ -19,8 +19,8 @@ const AppContent = () => {
   return (
     <ConfigProvider
       theme={{
-        algorithm: darkMode 
-          ? antdTheme.darkAlgorithm 
+        algorithm: darkMode
+          ? antdTheme.darkAlgorithm
           : antdTheme.defaultAlgorithm,
       }}
     >
@@ -28,7 +28,8 @@ const AppContent = () => {
         <Router>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            
+            <Route path="/access-denied" element={<AccessDenied />} />
+
             <Route
               path="/"
               element={
@@ -39,10 +40,18 @@ const AppContent = () => {
             >
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route
+                path="users"
+                element={
+                  <PrivateRoute requiredRoles={[1]}>
+                    <UsersPage />
+                  </PrivateRoute>
+                }
+              />
               <Route path="data" element={<Dashboard />} />
               <Route path="settings" element={<Dashboard />} />
             </Route>
-            
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>

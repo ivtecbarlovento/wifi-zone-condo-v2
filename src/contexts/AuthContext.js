@@ -1,5 +1,5 @@
 // src/contexts/AuthContext.js
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { login as apiLogin, logout as apiLogout } from '../api/auth';
 
@@ -7,33 +7,30 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in on mount
+    // Check if user is already logged in
     const token = Cookies.get('token');
-    if (token) {
-      // You might want to validate the token with the server here
-      const userData = JSON.parse(localStorage.getItem('user'));
-      setUser(userData);
+    const userInfo = localStorage.getItem('userInfo');
+    
+    if (token && userInfo) {
+      setUser(JSON.parse(userInfo));
     }
-    setLoading(false);
   }, []);
 
   const login = async (credentials) => {
     setLoading(true);
     try {
-      const response = await apiLogin(credentials);
-      const { token, user: userData } = response;
+      const result = await apiLogin(credentials);
       
-      // Store token in cookie
-      Cookies.set('token', token, { expires: 7 });
-      
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      setUser(userData);
-      return true;
+      if (result.token) {
+        Cookies.set('token', result.token, { expires: 1 }); // 1 day
+        localStorage.setItem('userInfo', JSON.stringify(result.user));
+        setUser(result.user);
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Login failed:', error);
       return false;
@@ -43,15 +40,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    setLoading(true);
     try {
       await apiLogout();
-    } catch (error) {
-      console.error('Logout API error:', error);
-    } finally {
-      // Even if API fails, clear local data
       Cookies.remove('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem('userInfo');
       setUser(null);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,5 +61,3 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-export default AuthContext;

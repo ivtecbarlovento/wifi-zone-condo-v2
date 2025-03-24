@@ -41,3 +41,91 @@ body,
 .ant-layout-sider::-webkit-scrollbar-track {
     background-color: rgba(0, 0, 0, 0.1);
 }
+
+/* Table responsiveness */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.table-responsive .ant-table-wrapper {
+    overflow-x: auto;
+}
+
+.table-responsive .ant-table {
+    min-width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .ant-layout-header {
+        padding: 0 12px;
+        height: 56px;
+        line-height: 56px;
+    }
+
+    .logo {
+        height: 40px;
+        margin: 8px 0;
+    }
+    
+    /* Adjust table styling for mobile */
+    .ant-table-thead > tr > th,
+    .ant-table-tbody > tr > td {
+        padding: 8px 4px;
+    }
+    
+    /* Adjust button sizing for mobile */
+    .ant-btn-sm {
+        font-size: 12px;
+        padding: 0 8px;
+        height: 24px;
+    }
+}
+
+/* Mobile sidebar overlay */
+.mobile-sidebar-open .ant-layout-sider {
+    position: fixed !important;
+    z-index: 999 !important;
+    height: 100vh !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.mobile-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    z-index: 998;
+    display: none;
+}
+
+.mobile-sidebar-open .mobile-sidebar-overlay {
+    display: block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .ant-layout-header {
+        padding: 0 8px !important;
+        height: 56px !important;
+        line-height: 56px !important;
+    }
+
+    .ant-layout-content {
+        margin: 8px !important;
+        padding: 12px !important;
+    }
+
+    .logo {
+        height: 40px !important;
+        margin: 8px 0 !important;
+    }
+
+    /* Hide username on mobile */
+    .user-info span {
+        display: none;
+    }
+}

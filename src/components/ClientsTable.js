@@ -1,12 +1,17 @@
 // src/components/ClientsTable.js
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Space, Spin, Tag, Modal, Form, Select, Popconfirm } from 'antd';
-import {ReloadOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Space, Spin, Tag, Modal, Form, Select, Popconfirm, Grid } from 'antd';
+import { ReloadOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { fetchClients, updateClientStatus, deleteClient, fetchZones, createClient, updateClient } from '../api/data';
+import { useAuth } from '../contexts/AuthContext';
 
 const { confirm } = Modal;
+const { useBreakpoint } = Grid;
 
 const ClientsTable = () => {
+    const { user } = useAuth(); // Get current user from auth context
+    const userZone = user?.id_zone || 1; // Default to zone 1 if not available
+    const isAdmin = userZone === 1; // Check if user is admin (zone 1)
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
@@ -20,6 +25,8 @@ const ClientsTable = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [form] = Form.useForm();
     const [editingClient, setEditingClient] = useState(null);
+    const screens = useBreakpoint();
+    const isMobile = screens.xs || screens.sm;
 
     useEffect(() => {
         loadData();
@@ -54,7 +61,7 @@ const ClientsTable = () => {
     const loadZones = async () => {
         try {
             const zonesData = await fetchZones();
-            setZones(zonesData); // This should contain both zone id and zone name/area
+            setZones(zonesData);
         } catch (error) {
             console.error('Failed to fetch zones:', error);
         }
@@ -86,13 +93,13 @@ const ClientsTable = () => {
             cancelText: 'No',
             onOk: async () => {
                 try {
-                    setLoading(true); // Show loading state
+                    setLoading(true);
                     await deleteClient(idNumber);
-                    await loadData(); // Reload data after successful delete
+                    await loadData();
                 } catch (error) {
                     console.error('Failed to delete client:', error);
                 } finally {
-                    setLoading(false); // Hide loading state
+                    setLoading(false);
                 }
             },
         });
@@ -102,24 +109,39 @@ const ClientsTable = () => {
         try {
             setLoading(true);
             await updateClientStatus(idNumber, newStatus);
-            await loadData(); // Make sure to await this
+            await loadData();
         } catch (error) {
             console.error('Failed to update status:', error);
         } finally {
             setLoading(false);
         }
     };
+
     const showEditModal = (client) => {
         setEditingClient(client);
-        form.setFieldsValue({
-            name: client.name,
-            last_name: client.last_name,
-            id_number: client.id_number,
-            status: client.status,
-            zone_name: client.zone_name,
-            username: client.username,
-            password: '', // For security, don't show existing password
-        });
+
+        // Prepare form values
+        const formValues = {
+            name: client ? client.name : '',
+            last_name: client ? client.last_name : '',
+            id_number: client ? client.id_number : '',
+            status: client ? client.status : 'Active',
+            apartment: client ? client.apartment : '',
+            username: client ? client.username : '',
+            password: '',
+        };
+
+        // Set zone_name based on user role
+        if (isAdmin) {
+            // For admin: use client's zone if editing, otherwise use first zone in the list
+            formValues.zone_name = client ? client.zone_name : (zones.length > 0 ? zones[0].area : '');
+        } else {
+            // For non-admin: always use their assigned zone
+            const userZoneName = zones.find(zone => zone.id === userZone)?.area || '';
+            formValues.zone_name = userZoneName;
+        }
+
+        form.setFieldsValue(formValues);
         setIsModalVisible(true);
     };
 
@@ -127,46 +149,45 @@ const ClientsTable = () => {
         try {
             const values = await form.validateFields();
             setLoading(true);
-            
-            console.log("Form values:", values);
-            
-            // Find the zone object by name to get its ID
-            const selectedZone = zones.find(zone => zone.area === values.zone_name);
-            console.log("Selected zone:", selectedZone);
-            
-            if (!selectedZone) {
-                throw new Error('Invalid zone selected');
+
+            let selectedZone;
+
+            if (isAdmin) {
+                // Admin can select any zone
+                selectedZone = zones.find(zone => zone.area === values.zone_name);
+                if (!selectedZone) {
+                    throw new Error('Invalid zone selected');
+                }
+            } else {
+                // Non-admin users can only create clients in their own zone
+                selectedZone = zones.find(zone => zone.id === userZone);
+                if (!selectedZone) {
+                    throw new Error('User zone not found');
+                }
             }
-    
-            // Create a new object with id_zone instead of zone_name
+
             const clientData = {
                 ...values,
-                id_zone: selectedZone.id, // Changed from zone_id to id_zone
+                id_zone: selectedZone.id,
             };
-            
-            console.log("Client data to be sent:", clientData);
-    
+
             if (editingClient) {
-                console.log("Updating client...");
                 await updateClient(editingClient.id_number, clientData);
             } else {
-                console.log("Creating new client...");
-                const result = await createClient(clientData);
-                console.log("Create client result:", result);
+                await createClient(clientData);
             }
-    
+
             setIsModalVisible(false);
             form.resetFields();
             loadData();
         } catch (error) {
             console.error('Form submission failed:', error);
-            // Log more detailed error information
-            console.error('Error details:', error.response ? error.response.data : error.message);
         } finally {
             setLoading(false);
         }
     };
-    
+
+
     const handleCancel = () => {
         setIsModalVisible(false);
         form.resetFields();
@@ -178,6 +199,7 @@ const ClientsTable = () => {
             dataIndex: 'id_number',
             key: 'id_number',
             sorter: true,
+            responsive: ['md'],
         },
         {
             title: 'Name',
@@ -190,13 +212,13 @@ const ClientsTable = () => {
             title: 'Username',
             dataIndex: 'username',
             key: 'username',
+            responsive: ['md'],
         },
         {
-            title: 'Zone',
-            dataIndex: 'zone_name',
-            key: 'zone_name',
-            filters: zones.map(zone => ({ text: zone.area, value: zone.area })),
-            onFilter: (value, record) => record.zone_name === value,
+            title: 'Apartment',
+            dataIndex: 'apartment',  // Changed from zone_name to apartment
+            key: 'apartment',
+            responsive: ['sm'],
         },
         {
             title: 'Status',
@@ -217,15 +239,14 @@ const ClientsTable = () => {
             title: 'Actions',
             key: 'actions',
             render: (_, record) => (
-                <span style={{ position: 'center' }}>
+                <Space size="small" wrap>
                     <Button
-                        style={{}}
+                        size={isMobile ? "small" : "middle"}
                         onClick={() => {
                             const newStatus = record.status === "Active" ? "Inactive" : "Active";
                             setLoading(true);
                             updateClientStatus(record.id_number, newStatus)
                                 .then(() => {
-                                    // Optimistically update UI
                                     setData(prev => prev.map(client =>
                                         client.id_number === record.id_number
                                             ? { ...client, status: newStatus }
@@ -244,7 +265,7 @@ const ClientsTable = () => {
                         {record.status === "Active" ? "Deactivate" : "Activate"}
                     </Button>
                     <Button
-                        style={{ marginLeft: 16 }}
+                        size={isMobile ? "small" : "middle"}
                         onClick={() => showEditModal(record)}
                     >
                         <EditOutlined />
@@ -255,12 +276,10 @@ const ClientsTable = () => {
                             setLoading(true);
                             deleteClient(record.id_number)
                                 .then(() => {
-                                    // Optimistically update UI
                                     setData(prev => prev.filter(client => client.id_number !== record.id_number));
                                 })
                                 .catch(error => {
                                     console.error('Failed to delete client:', error);
-                                    // If error, reload data to ensure consistency
                                     loadData();
                                 })
                                 .finally(() => {
@@ -270,22 +289,22 @@ const ClientsTable = () => {
                         okText="Yes"
                         cancelText="No"
                     >
-                        <Button style={{ color: 'red', marginLeft: 16 }}>
+                        <Button size={isMobile ? "small" : "middle"} danger>
                             <DeleteOutlined />
                         </Button>
                     </Popconfirm>
-                </span>
+                </Space>
             ),
         },
     ];
 
     return (
         <div>
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: isMobile ? '8px' : '16px' }}>
                 <Input.Search
                     placeholder="Search clients..."
                     onSearch={handleSearch}
-                    style={{ width: 300 }}
+                    style={{ width: isMobile ? '100%' : 300 }}
                     allowClear
                 />
                 <Space>
@@ -294,6 +313,23 @@ const ClientsTable = () => {
                         icon={<PlusOutlined />}
                         onClick={() => {
                             setEditingClient(null);
+
+                            // Initialize form with defaults
+                            const formValues = {
+                                status: 'Active',
+                            };
+
+                            // Set zone_name based on user role
+                            if (isAdmin) {
+                                // For admin: use first zone in the list
+                                formValues.zone_name = zones.length > 0 ? zones[0].area : '';
+                            } else {
+                                // For non-admin: use their assigned zone
+                                const userZoneName = zones.find(zone => zone.id === userZone)?.area || '';
+                                formValues.zone_name = userZoneName;
+                            }
+
+                            form.setFieldsValue(formValues);
                             setIsModalVisible(true);
                         }}
                     >
@@ -310,13 +346,17 @@ const ClientsTable = () => {
             </div>
 
             <Spin spinning={loading}>
-                <Table
-                    columns={columns}
-                    dataSource={data}
-                    rowKey="id_number"
-                    pagination={pagination}
-                    onChange={handleTableChange}
-                />
+                <div className="table-responsive">
+                    <Table
+                        columns={columns}
+                        dataSource={data}
+                        rowKey="id_number"
+                        pagination={pagination}
+                        onChange={handleTableChange}
+                        scroll={{ x: 'max-content' }}
+                        size={isMobile ? "small" : "middle"}
+                    />
+                </div>
             </Spin>
 
             <Modal
@@ -325,6 +365,7 @@ const ClientsTable = () => {
                 onOk={handleOk}
                 onCancel={handleCancel}
                 confirmLoading={loading}
+                width={isMobile ? "95%" : 520}
             >
                 <Form
                     form={form}
@@ -355,19 +396,45 @@ const ClientsTable = () => {
                     </Form.Item>
 
                     <Form.Item
-                        name="zone_name"
-                        label="Zone"
-                        rules={[{ required: true, message: 'Please select a zone' }]}
+                        name="apartment"
+                        label="Apartment"
+                        rules={[{ required: true, message: 'Please enter apartment number' }]}
                     >
-                        <Select>
-                            {zones.map(zone => (
-                                <Select.Option key={zone.id} value={zone.area}>
-                                    {zone.area}
-                                </Select.Option>
-                            ))}
-                        </Select>
+                        <Input />
                     </Form.Item>
-                    
+
+                    {/* Conditionally render zone selector based on user's zone */}
+                    {isAdmin ? (
+                        <Form.Item
+                            name="zone_name"
+                            label="Zone"
+                            rules={[{ required: true, message: 'Please select a zone' }]}
+                        >
+                            <Select>
+                                {zones.map(zone => (
+                                    <Select.Option key={zone.id} value={zone.area}>
+                                        {zone.area}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    ) : (
+                        // For non-admin users, show disabled selector with their zone pre-selected
+                        <Form.Item
+                            name="zone_name"
+                            label="Zone"
+                        >
+                            <Select disabled>
+                                {zones
+                                    .filter(zone => zone.id === userZone)
+                                    .map(zone => (
+                                        <Select.Option key={zone.id} value={zone.area}>
+                                            {zone.area}
+                                        </Select.Option>
+                                    ))}
+                            </Select>
+                        </Form.Item>
+                    )}
                     <Form.Item
                         name="username"
                         label="Username"
