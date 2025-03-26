@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 
 // Create axios instance with default config
 const apiClient = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || '',
+    baseURL: process.env.REACT_APP_API_URL,
     headers: {
         'Content-Type': 'application/json',
     },
