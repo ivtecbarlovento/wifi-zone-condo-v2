@@ -66,7 +66,6 @@ const UsersTable = ({
             key: 'actions',
             render: (_, record) => (
                 <Space size="middle">
-                    {canManageUsers && (
                         <>
                             <Button
                                 icon={<EditOutlined />}
@@ -88,7 +87,7 @@ const UsersTable = ({
                                 />
                             </Popconfirm>
                         </>
-                    )}
+
                 </Space>
             ),
         },
@@ -97,7 +96,7 @@ const UsersTable = ({
     return (
         <div>
             {/* Add User Button */}
-            {canManageUsers && (
+
                 <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button 
                         type="primary" 
@@ -107,7 +106,7 @@ const UsersTable = ({
                         Add User
                     </Button>
                 </div>
-            )}
+            
             
             <Table
                 columns={columns}
