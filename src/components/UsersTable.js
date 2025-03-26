@@ -1,7 +1,9 @@
 // src/components/UsersTable.js
 import React from 'react';
-import { Table, Button, Space, Tag, Popconfirm } from 'antd';
+import { Table, Button, Space, Tag, Popconfirm, Grid } from 'antd';
 import { EditOutlined, DeleteOutlined, UserAddOutlined } from '@ant-design/icons';
+
+const { useBreakpoint } = Grid;
 
 const UsersTable = ({ 
     users, 
@@ -12,7 +14,10 @@ const UsersTable = ({
     onDelete, 
     onAdd,
     canManageUsers 
+    
 }) => {
+    const screens = useBreakpoint();
+    const isMobile = screens.xs || screens.sm;
     // Function to render the role tag color
     const getRoleColor = (roleId) => {
         switch (parseInt(roleId)) {
@@ -110,6 +115,8 @@ const UsersTable = ({
                 rowKey="id"
                 loading={loading}
                 pagination={{ pageSize: 10 }}
+                scroll={{ x: 'max-content' }}
+                size={isMobile ? "small" : "middle"}
             />
         </div>
     );

@@ -198,26 +198,35 @@ const ClientsTable = () => {
             title: 'ID Number',
             dataIndex: 'id_number',
             key: 'id_number',
-            sorter: true,
             responsive: ['md'],
         },
         {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
-            sorter: true,
+            sorter: (a, b) => a.name.localeCompare(b.name),
             render: (text, record) => `${record.name} ${record.last_name}`,
         },
         {
             title: 'Username',
             dataIndex: 'username',
             key: 'username',
+            sorter: (a, b) => a.username.localeCompare(b.username),
             responsive: ['md'],
         },
         {
+            title: 'Zone',
+            dataIndex: 'zone_name',
+            key: 'zone_name',
+            filters: zones.map(zone => ({ text: zone.area, value: zone.area })),
+            onFilter: (value, record) => record.zone_name === value,
+            responsive: ['sm'],
+        },
+        {
             title: 'Apartment',
-            dataIndex: 'apartment',  // Changed from zone_name to apartment
+            dataIndex: 'apartment',
             key: 'apartment',
+            sorter: (a, b) => a.apartment.localeCompare(b.apartment),
             responsive: ['sm'],
         },
         {
