@@ -1,7 +1,7 @@
 // src/api/devices.js
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_URL || '';
+const BASE_URL = '';
 
 export const devicesApi = {
     // Fetch all devices (without zone filtering)
