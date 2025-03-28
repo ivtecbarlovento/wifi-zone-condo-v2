@@ -1,10 +1,16 @@
 // src/components/Sidebar.js
 import React from 'react';
 import { Layout, Menu, Grid } from 'antd';
-import { DashboardOutlined, LogoutOutlined, TeamOutlined } from '@ant-design/icons';
+import {
+    DashboardOutlined,
+    LogoutOutlined,
+    TeamOutlined,
+    DatabaseOutlined  // New import for Devices icon
+} from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+
 
 // Import the logo assets
 import LogoLargeWhite from '../assets/LogoLargeWhite.png';
@@ -22,7 +28,10 @@ const Sidebar = ({ collapsed, toggleCollapsed }) => {
     const { darkMode } = useTheme();
     const screens = useBreakpoint();
     const isMobile = screens.xs || screens.sm;
+    const userZone = user?.id_zone || 1; // Default to zone 1 if not available
+    const isAdmin = userZone === 1; // Check if user is admin (zone 1)
 
+    // Modify menuItems to conditionally include Devices menu
     const menuItems = [
         {
             key: '/dashboard',
@@ -34,6 +43,12 @@ const Sidebar = ({ collapsed, toggleCollapsed }) => {
             icon: <TeamOutlined />,
             label: 'Users',
         },
+        // Only show Devices for zone 1 admins
+        ...(isAdmin ? [{
+            key: '/devices',
+            icon: <DatabaseOutlined />,
+            label: 'Devices',
+        }] : []),
         {
             key: 'logout',
             icon: <LogoutOutlined />,
@@ -41,7 +56,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }) => {
             onClick: logout,
         }
     ];
-
+    
     // Handle menu item clicks
     const handleMenuClick = (item) => {
         if (item.key === 'logout') {
@@ -49,7 +64,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }) => {
         } else {
             navigate(item.key);
         }
-        
+
         // On mobile, auto-collapse the sidebar after navigation
         if (isMobile && !collapsed) {
             toggleCollapsed(); // Now using the passed prop
@@ -60,7 +75,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }) => {
         <>
             {/* Overlay for mobile - only shown when sidebar is expanded on mobile */}
             {isMobile && !collapsed && (
-                <div 
+                <div
                     className="mobile-sidebar-overlay"
                     onClick={toggleCollapsed} // Now using the passed prop
                     style={{
@@ -74,7 +89,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }) => {
                     }}
                 />
             )}
-            
+
             <Sider
                 trigger={null}
                 collapsible
@@ -100,12 +115,12 @@ const Sidebar = ({ collapsed, toggleCollapsed }) => {
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}>
-                    <img 
+                    <img
                         src={
-                            collapsed 
-                                ? (darkMode ? LogoWhite : LogoBlack) 
+                            collapsed
+                                ? (darkMode ? LogoWhite : LogoBlack)
                                 : (darkMode ? LogoLargeWhite : LogoLargeBlack)
-                        } 
+                        }
                         alt="IVTEC Logo"
                         style={{
                             maxHeight: '100%',

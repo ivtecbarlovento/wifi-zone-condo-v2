@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import UsersPage from './pages/UsersPage';
+import DevicesPage from './pages/DevicesPage';  // New import
 import AccessDenied from './pages/AccessDenied';
 import PrivateRoute from './components/PrivateRoute';
 import NotFound from './pages/NotFound';
@@ -45,6 +46,14 @@ const AppContent = () => {
                 element={
                   <PrivateRoute requiredRoles={[1]}>
                     <UsersPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="devices"
+                element={
+                  <PrivateRoute requiredRoles={[1]}>
+                    <DevicesPage />
                   </PrivateRoute>
                 }
               />
