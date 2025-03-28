@@ -46,5 +46,9 @@ export const devicesApi = {
             console.error('Error deleting device:', error);
             throw error;
         }
-    }
+    },
+
+
+
 };
+

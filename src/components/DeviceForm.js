@@ -1,5 +1,5 @@
 // src/components/DeviceForm.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Form,
     Input,
@@ -10,8 +10,23 @@ import {
 
 const { Option } = Select;
 
-const DeviceForm = ({ visible, onCancel, onSubmit }) => {
+const DeviceForm = ({ 
+    visible, 
+    onCancel, 
+    onSubmit, 
+    initialValues = null, 
+    title = "Add New Device" 
+}) => {
     const [form] = Form.useForm();
+
+    // Reset form when initialValues change
+    useEffect(() => {
+        if (initialValues) {
+            form.setFieldsValue(initialValues);
+        } else {
+            form.resetFields();
+        }
+    }, [initialValues, form]);
 
     const handleSubmit = (values) => {
         onSubmit(values);
@@ -20,7 +35,7 @@ const DeviceForm = ({ visible, onCancel, onSubmit }) => {
 
     return (
         <Modal
-            title="Add New Device"
+            title={title}
             visible={visible}
             onCancel={onCancel}
             footer={null}
@@ -29,13 +44,14 @@ const DeviceForm = ({ visible, onCancel, onSubmit }) => {
                 form={form}
                 layout="vertical"
                 onFinish={handleSubmit}
+                initialValues={initialValues || {}}
             >
                 <Form.Item
                     name="nasname"
-                    label="NAS Name"
-                    rules={[{ required: true, message: 'Please input NAS name!' }]}
+                    label="NAS IP Address"
+                    rules={[{ required: true, message: 'Please input NAS IP Address!' }]}
                 >
-                    <Input placeholder="Enter NAS name" />
+                    <Input placeholder="Enter NAS IP Address" />
                 </Form.Item>
 
                 <Form.Item
@@ -52,24 +68,11 @@ const DeviceForm = ({ visible, onCancel, onSubmit }) => {
                     rules={[{ required: true, message: 'Please select device type!' }]}
                 >
                     <Select placeholder="Select device type">
-                        <Option value="cisco">Cisco</Option>
+                        <Option value="ubiquiti">Ubiquiti</Option>
                         <Option value="mikrotik">Mikrotik</Option>
+                        <Option value="tplink">TP-Link</Option>
                         <Option value="other">Other</Option>
                     </Select>
-                </Form.Item>
-
-                <Form.Item
-                    name="nasipaddress"
-                    label="IP Address"
-                    rules={[
-                        { required: true, message: 'Please input IP address!' },
-                        {
-                            pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
-                            message: 'Please enter a valid IP address!'
-                        }
-                    ]}
-                >
-                    <Input placeholder="Enter IP address" />
                 </Form.Item>
 
                 <Form.Item
@@ -82,7 +85,7 @@ const DeviceForm = ({ visible, onCancel, onSubmit }) => {
 
                 <Form.Item>
                     <Button type="primary" htmlType="submit" block>
-                        Add Device
+                        {initialValues ? 'Update Device' : 'Add Device'}
                     </Button>
                 </Form.Item>
             </Form>
